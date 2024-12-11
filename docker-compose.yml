@@ -1,0 +1,59 @@
+version: '3.9'
+services:
+  backend:
+    image: general.image
+    build: "./backend"
+    stop_grace_period: 1s
+    ports:
+      - "127.0.0.1:${FLASK_AUTH_PORT}:5005"
+    env_file:
+      - .env
+    depends_on:
+      - db
+    volumes:
+      - ./backend:/app
+    working_dir: 
+      "/app"
+    environment:
+      - REACT=${FLASK_UTIL_DOMAIN}
+      - DATABASE_URL=postgresql://${DB_USER}:${DB_PASSWORD}@db/${DB_NAME}
+      - FLASK_ENV=development
+    networks:
+      - net
+      - web
+  db:
+    image: general.image
+    stop_grace_period: 5s
+    volumes: 
+      - ./db:/data
+      - ./db/backup:/backup
+    networks:
+      - net
+    environment:
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME}
+      - PGDATA=/data/postgres
+    ports:
+      - "5432"
+  frontend:
+    image: general.image
+    build: ./frontend/my-react-app
+    ports:
+      - "127.0.0.1:${REACT_PORT}:3000"
+    stop_grace_period: 1s
+    depends_on:
+      - backend
+    command: "bash -c 'npm ci && npm install -g serve && npm run build && serve -s build'"
+    env_file:
+      - .env
+    volumes: 
+      - ./frontend/my-react-app:/app
+    networks:
+      - web
+
+networks:
+  net:
+    name: "net${NET_NAME}"
+  web:
+    name: "web${NET_NAME}"
