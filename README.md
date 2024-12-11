@@ -1,1 +1,1 @@
-:)
+This is a an upload and download tool for the database. The tool uploads the excel file into the database with several functions present (override, merge, and create), as well as can download the tables converted into an excel file
